@@ -7,8 +7,50 @@ import KPIRow from './components/KPIRow.jsx';
 import ChartGrid from './components/ChartGrid.jsx';
 import { TableCE, TableSP, TableRF, TableID } from './components/Tables.jsx';
 
+const BASE = import.meta.env.BASE_URL;
+
+async function svgUrlToPngBase64(svgUrl, width, height) {
+  const res = await fetch(svgUrl);
+  const svgText = await res.text();
+  const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    const dpr = 2;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL('image/png').split(',')[1];
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function captureChartImages() {
+  const nodes = document.querySelectorAll('.chart-box canvas');
+  const images = [];
+  nodes.forEach((c) => {
+    try {
+      images.push(c.toDataURL('image/png').split(',')[1]);
+    } catch {
+      images.push(null);
+    }
+  });
+  return images;
+}
+
 export default function App() {
   const [inputs, setInputs] = useState(DEFAULTS);
+  const [exporting, setExporting] = useState(false);
 
   const onField = (name, value) => {
     setInputs((s) => ({ ...s, [name]: value }));
@@ -36,13 +78,29 @@ export default function App() {
   const onPrint = () => window.print();
   const onRecalc = () => setInputs((s) => ({ ...s }));
 
+  const onExportExcel = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const charts = captureChartImages();
+      const logo = await svgUrlToPngBase64(`${BASE}ingenia-logo-light.svg`, 360, 110).catch(() => null);
+      const { exportToExcel } = await import('./lib/excelExport.js');
+      await exportToExcel(inputs, charts, logo);
+    } catch (err) {
+      console.error('Errore export Excel:', err);
+      window.alert('Errore durante l\'export Excel. Controlla la console del browser.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const R = useMemo(() => compute(inputs), [inputs]);
 
   return (
     <>
       <header className="app-header">
         <a href="https://ingenia.cloud" target="_blank" rel="noopener" className="brand" title="Ingenia · ingenia.cloud">
-          <span className="dot" />Ingenia · ingenia.cloud
+          <img src={`${BASE}ingenia-logo-light.svg`} alt="Ingenia · Powering Future" className="brand-logo" />
         </a>
         <h1>Simulatore Start Up — Dashboard Interattiva (5 anni)</h1>
         <p>
@@ -59,6 +117,8 @@ export default function App() {
           onReset={onReset}
           onClear={onClear}
           onPrint={onPrint}
+          onExportExcel={onExportExcel}
+          exporting={exporting}
         />
 
         <main>

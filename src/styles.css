@@ -45,10 +45,18 @@ header.app-header p { margin: 4px 0 0; color: #cbd5e1; font-size: 13px; }
   display: inline-flex; align-items: center; gap: 8px;
 }
 .brand:hover { background: rgba(255, 255, 255, .24); }
+.brand-logo { height: 36px; width: auto; display: block; }
 .brand .dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .25);
 }
+.btn-export {
+  background: linear-gradient(135deg, #1d6f43, #117a3d);
+  color: #fff;
+  border: 1px solid #0f6a36;
+}
+.btn-export:hover { filter: brightness(1.05); }
+.btn-export:disabled { opacity: .6; cursor: progress; }
 @media (max-width: 780px) {
   .brand { position: static; display: inline-flex; margin-top: 10px; }
 }

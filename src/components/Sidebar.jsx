@@ -1,6 +1,6 @@
 import NumberField from './NumberField.jsx';
 
-export default function Sidebar({ inputs, onField, onRecalc, onReset, onClear, onPrint }) {
+export default function Sidebar({ inputs, onField, onRecalc, onReset, onClear, onPrint, onExportExcel, exporting }) {
   const f = (name, label, step = 1) => (
     <NumberField name={name} label={label} step={step} value={inputs[name]} onChange={onField} />
   );
@@ -144,6 +144,14 @@ export default function Sidebar({ inputs, onField, onRecalc, onReset, onClear, o
         <button className="btn btn-ghost" onClick={onReset}>Reset esempio</button>
         <button className="btn btn-danger" title="Azzera tutti i campi" onClick={onClear}>Azzera tutti gli input</button>
         <button className="btn btn-ghost no-print" onClick={onPrint}>Stampa / PDF</button>
+        <button
+          className="btn btn-export no-print"
+          onClick={onExportExcel}
+          disabled={exporting}
+          title="Esporta workbook Excel con formule live, formattazione professionale, grafici e indici"
+        >
+          {exporting ? 'Esportazione…' : 'Esporta Excel'}
+        </button>
       </div>
       <p className="help" style={{ marginTop: 10 }}>
         I calcoli si aggiornano automaticamente ad ogni modifica. Tutti i valori sono in € a parità di potere d&apos;acquisto. Modello didattico — non sostituisce un parere professionale.

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 110" role="img" aria-label="Ingenia · Powering Future">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7C5BC9"/>
+      <stop offset="0.4" stop-color="#5C8BD2"/>
+      <stop offset="0.7" stop-color="#3FB1AB"/>
+      <stop offset="1" stop-color="#3FB17B"/>
+    </linearGradient>
+    <linearGradient id="markGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8C81C8"/>
+      <stop offset="1" stop-color="#5BA8B8"/>
+    </linearGradient>
+  </defs>
+  <!-- Mark -->
+  <g transform="translate(20 12)">
+    <path d="M4 4 L26 22 L4 40" fill="none" stroke="url(#markGrad2)" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+    <rect x="4" y="44" width="22" height="5" fill="#3FB1AB"/>
+  </g>
+  <!-- INGENIA wordmark -->
+  <text x="80" y="64" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="42" letter-spacing="2" fill="url(#logoGrad)">INGENIA</text>
+  <!-- Underline strokes -->
+  <line x1="80" y1="76" x2="320" y2="76" stroke="#7C5BC9" stroke-width="1"/>
+  <line x1="80" y1="100" x2="320" y2="100" stroke="#3FB17B" stroke-width="1"/>
+  <!-- POWERING FUTURE -->
+  <text x="200" y="93" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="13" letter-spacing="6" fill="url(#logoGrad)">POWERING FUTURE</text>
+</svg>
