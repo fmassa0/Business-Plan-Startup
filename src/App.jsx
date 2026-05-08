@@ -100,12 +100,14 @@ export default function App() {
     <>
       <header className="app-header">
         <a href="https://ingenia.cloud" target="_blank" rel="noopener" className="brand" title="Ingenia · ingenia.cloud">
+          <span className="dot" />
           <img src={`${BASE}ingenia-logo-light.svg`} alt="Ingenia · Powering Future" className="brand-logo" />
         </a>
-        <h1>Simulatore Start Up — Dashboard Interattiva (5 anni)</h1>
+        <div className="crumb">Business Plan · 5 Year Forecast</div>
+        <h1>Simulatore Start Up <span className="accent">·</span> Dashboard Interattiva</h1>
         <p>
-          Inserisci i valori base e usa gli slider per simulare scenari what-if in tempo reale.
-          Conto Economico, Stato Patrimoniale, Rendiconto Finanziario e Indici si ricalcolano automaticamente.
+          Inserisci le ipotesi base e usa gli slider what-if per stress-testare lo scenario in tempo reale.
+          Conto Economico, Stato Patrimoniale, Rendiconto Finanziario e Indici si ricalcolano istantaneamente.
         </p>
       </header>
 
@@ -122,21 +124,21 @@ export default function App() {
         />
 
         <main>
-          <WhatIf inputs={inputs} onField={onField} onPreset={onPreset} />
+          <div className="fade-up"><WhatIf inputs={inputs} onField={onField} onPreset={onPreset} /></div>
           <KPIRow R={R} />
-          <ChartGrid R={R} />
+          <div className="fade-up-delay-2"><ChartGrid R={R} /></div>
 
           <h2 className="section-title">Conto Economico Previsionale</h2>
-          <div className="table-wrap"><TableCE R={R} /></div>
+          <div className="table-wrap fade-up"><TableCE R={R} /></div>
 
           <h2 className="section-title">Stato Patrimoniale Previsionale</h2>
-          <div className="table-wrap"><TableSP R={R} /></div>
+          <div className="table-wrap fade-up"><TableSP R={R} /></div>
 
           <h2 className="section-title">Rendiconto Finanziario (metodo indiretto)</h2>
-          <div className="table-wrap"><TableRF R={R} /></div>
+          <div className="table-wrap fade-up"><TableRF R={R} /></div>
 
           <h2 className="section-title">Indici di Bilancio &amp; Valutazione del Progetto</h2>
-          <div className="table-wrap"><TableID R={R} /></div>
+          <div className="table-wrap fade-up"><TableID R={R} /></div>
         </main>
       </div>
 

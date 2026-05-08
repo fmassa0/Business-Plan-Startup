@@ -8,8 +8,28 @@ Chart.register(
   BarController, BarElement, LineController, LineElement, PointElement,
   CategoryScale, LinearScale, Tooltip, Legend, Title, Filler
 );
-Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto";
+Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto";
 Chart.defaults.font.size = 11;
+Chart.defaults.color = '#64748B';
+Chart.defaults.borderColor = '#EEF1F5';
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.boxHeight = 10;
+Chart.defaults.plugins.legend.labels.padding = 16;
+Chart.defaults.plugins.tooltip.backgroundColor = '#0A1F44';
+Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 12 };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+const PALETTE = {
+  navy:   '#0A1F44',
+  navy2:  '#1E3A8A',
+  teal:   '#00B0A0',
+  teal2:  '#00C9B7',
+  amber:  '#F59E0B',
+  red:    '#EF4444',
+  purple: '#7C5BC9'
+};
 
 const yLabels = ['Anno 1', 'Anno 2', 'Anno 3', 'Anno 4', 'Anno 5'];
 const eurTick = { callback: (v) => '€' + (v / 1000).toFixed(0) + 'k' };
@@ -18,42 +38,44 @@ export default function ChartGrid({ R }) {
   const revData = {
     labels: yLabels,
     datasets: [
-      { type: 'bar',  label: 'Ricavi',      data: R.CE.map((c) => c.ricavi),  backgroundColor: '#0b3d91' },
-      { type: 'bar',  label: 'EBITDA',      data: R.CE.map((c) => c.ebitda),  backgroundColor: '#10b981' },
-      { type: 'line', label: 'Utile Netto', data: R.CE.map((c) => c.utile),   borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.25 }
+      { type: 'bar',  label: 'Ricavi',      data: R.CE.map((c) => c.ricavi),  backgroundColor: PALETTE.navy,  borderRadius: 4 },
+      { type: 'bar',  label: 'EBITDA',      data: R.CE.map((c) => c.ebitda),  backgroundColor: PALETTE.teal,  borderRadius: 4 },
+      { type: 'line', label: 'Utile Netto', data: R.CE.map((c) => c.utile),   borderColor: PALETTE.amber, backgroundColor: PALETTE.amber, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 }
     ]
   };
 
   const fcfData = {
     labels: yLabels,
     datasets: [
-      { type: 'bar',  label: 'FCF',          data: R.FCF,    backgroundColor: R.FCF.map((v) => (v >= 0 ? '#10b981' : '#ef4444')) },
-      { type: 'line', label: 'FCF cumulato', data: R.FCFcum, borderColor: '#0b3d91', backgroundColor: '#0b3d91', tension: 0.25, fill: false }
+      { type: 'bar',  label: 'FCF',          data: R.FCF,    backgroundColor: R.FCF.map((v) => (v >= 0 ? PALETTE.teal : PALETTE.red)), borderRadius: 4 },
+      { type: 'line', label: 'FCF cumulato', data: R.FCFcum, borderColor: PALETTE.navy, backgroundColor: PALETTE.navy, tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 }
     ]
   };
 
   const spData = {
     labels: yLabels,
     datasets: [
-      { type: 'bar',  label: 'Patrimonio Netto',          data: R.SP.map((s) => s.PN),                       backgroundColor: '#0b3d91', stack: 'a' },
-      { type: 'bar',  label: 'Debiti finanziari',         data: R.SP.map((s) => s.debFin),                   backgroundColor: '#ef4444', stack: 'a' },
-      { type: 'bar',  label: 'Debiti commerciali+IVA+trib.', data: R.SP.map((s) => s.debComm + s.debIVA + s.debTrib), backgroundColor: '#f59e0b', stack: 'a' },
-      { type: 'line', label: 'Cassa',                      data: R.SP.map((s) => s.cassa),                    borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.25 }
+      { type: 'bar',  label: 'Patrimonio Netto',          data: R.SP.map((s) => s.PN),                       backgroundColor: PALETTE.navy,   stack: 'a', borderRadius: 4 },
+      { type: 'bar',  label: 'Debiti finanziari',         data: R.SP.map((s) => s.debFin),                   backgroundColor: PALETTE.red,    stack: 'a', borderRadius: 4 },
+      { type: 'bar',  label: 'Debiti commerciali+IVA+trib.', data: R.SP.map((s) => s.debComm + s.debIVA + s.debTrib), backgroundColor: PALETTE.amber,  stack: 'a', borderRadius: 4 },
+      { type: 'line', label: 'Cassa',                      data: R.SP.map((s) => s.cassa),                    borderColor: PALETTE.teal, backgroundColor: PALETTE.teal, tension: 0.3, pointRadius: 3, borderWidth: 2 }
     ]
   };
 
   const indData = {
     labels: yLabels,
     datasets: [
-      { label: 'DSCR',       data: R.ID.map((d) => d.DSCR),      borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.25, yAxisID: 'y'  },
-      { label: 'PFN/EBITDA', data: R.ID.map((d) => d.pfnEbitda), borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.25, yAxisID: 'y1' }
+      { label: 'DSCR',       data: R.ID.map((d) => d.DSCR),      borderColor: PALETTE.teal, backgroundColor: PALETTE.teal, tension: 0.3, yAxisID: 'y',  pointRadius: 3, borderWidth: 2 },
+      { label: 'PFN/EBITDA', data: R.ID.map((d) => d.pfnEbitda), borderColor: PALETTE.red,  backgroundColor: PALETTE.red,  tension: 0.3, yAxisID: 'y1', pointRadius: 3, borderWidth: 2 }
     ]
   };
 
   const baseOpts = (extra = {}) => ({
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom' } },
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+    animation: { duration: 450, easing: 'easeOutCubic' },
     ...extra
   });
 
