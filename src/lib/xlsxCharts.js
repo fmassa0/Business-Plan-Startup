@@ -347,11 +347,11 @@ export async function injectNativeCharts(workbookBuffer, { targetSheetName, char
   const wbXml = await zip.file('xl/workbook.xml').async('string');
   const wbRelsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
 
-  const sheetMatch = new RegExp(`<sheet[^/]*name="${targetSheetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^/]*r:id="(rId\\d+)"`, 'i').exec(wbXml);
+  const sheetMatch = new RegExp(`<sheet[^>]*name="${targetSheetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*r:id="(rId\\d+)"`, 'i').exec(wbXml);
   if (!sheetMatch) throw new Error(`Sheet "${targetSheetName}" non trovato nel workbook`);
   const sheetRid = sheetMatch[1];
 
-  const relMatch = new RegExp(`<Relationship[^/]*Id="${sheetRid}"[^/]*Target="([^"]+)"`, 'i').exec(wbRelsXml);
+  const relMatch = new RegExp(`<Relationship[^>]*Id="${sheetRid}"[^>]*Target="([^"]+)"`, 'i').exec(wbRelsXml);
   if (!relMatch) throw new Error(`Relationship per ${sheetRid} non trovato`);
   let sheetTarget = relMatch[1]; // e.g. "worksheets/sheet7.xml"
   if (!sheetTarget.startsWith('xl/')) sheetTarget = 'xl/' + sheetTarget;
