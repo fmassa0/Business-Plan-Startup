@@ -2,6 +2,13 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { compute } from './compute.js';
 import { Y } from './defaults.js';
+import {
+  injectNativeCharts,
+  makeChartXml_RicaviEbitdaUtile,
+  makeChartXml_FCF,
+  makeChartXml_StatoPatrimoniale,
+  makeChartXml_DSCRpfn
+} from './xlsxCharts.js';
 
 /* =====================================================================
    Stile Big4: blu Ingenia per header/section, input azzurrini, formule
@@ -11,24 +18,38 @@ import { Y } from './defaults.js';
    ===================================================================== */
 
 const COL = {
-  ingDeep:    'FF0B3D91',
-  ingDarker:  'FF082C6A',
+  ingDeep:    'FF0A1F44',  // navy McKinsey
+  ingDarker:  'FF061634',
+  ingMid:     'FF1E3A8A',
+  teal:       'FF00B0A0',  // accent
+  tealLight:  'FFCFFAF4',
   ingLight:   'FFEEF4FF',
   inputBg:    'FFFFFBEB',
-  inputFg:    'FF0B3D91',
-  subTotal:   'FFEFF6FF',
-  total:      'FFF0FDF4',
-  section:    'FF082C6A',
+  inputFg:    'FF0A1F44',
+  subTotal:   'FFEEF4FF',
+  total:      'FFE6FAF6',  // teal tint per highlight
+  section:    'FF0A1F44',
   sectionFg:  'FFFFFFFF',
-  border:     'FFCBD5E1',
+  border:     'FFE2E7EE',
+  borderSoft: 'FFEEF1F5',
   muted:      'FF64748B',
   white:      'FFFFFFFF',
   good:       'FFDCFCE7',
-  goodFg:     'FF166534',
+  goodFg:     'FF14532D',
   warn:       'FFFEF3C7',
-  warnFg:     'FF92400E',
+  warnFg:     'FF78350F',
   bad:        'FFFEE2E2',
-  badFg:      'FF991B1B'
+  badFg:      'FF7F1D1D'
+};
+
+/* Series colors for charts (must match Chart.js palette) */
+export const CHART_PALETTE = {
+  navy:  '0A1F44',
+  navy2: '1E3A8A',
+  teal:  '00B0A0',
+  amber: 'F59E0B',
+  red:   'EF4444',
+  purple:'7C5BC9'
 };
 
 const FMT = {
@@ -705,13 +726,20 @@ function buildSP(wb, ceMeta) {
   dataRow(ws, r, 'Quadratura (Att - P&PN)',
     [0, ...Y_COLS.map((c) => ({ formula: `${c}${rowTotAtt}-${c}${rowTotPP}` }))],
     { fmt: FMT.euro, muted: true, formula: true });
+  r++;
+
+  // Helper: Altri debiti (commerc.+IVA+trib.) — usato per grafico SP stacked
+  dataRow(ws, r, 'Altri debiti (commerc.+IVA+trib.)',
+    [0, ...Y_COLS.map((c) => ({ formula: `${c}${rowDebComm}+${c}${rowDebIVA}+${c}${rowDebTrib}` }))],
+    { fmt: FMT.euro, muted: true, italic: true, formula: true });
+  const rowDebOther = r;
 
   return {
     rows: {
       rowImL, rowFAmmM, rowImN, rowIiL, rowFAmmI, rowIiN,
       rowTotImm, rowRim, rowCre, rowCassa, rowTotAC, rowTotAtt,
       rowCap, rowUtNuovo, rowUtEs, rowPN,
-      rowDebFin, rowDebComm, rowDebIVA, rowDebTrib, rowTotPass, rowTotPP
+      rowDebFin, rowDebComm, rowDebIVA, rowDebTrib, rowDebOther, rowTotPass, rowTotPP
     },
     placeholders: { RF_VARCASSA_PLACEHOLDER }
   };
@@ -975,6 +1003,7 @@ function buildIndici(wb, R, ceMeta, spMeta, rfMeta) {
     { formula: `D${r}+E${rowFCF}` },
     { formula: `E${r}+F${rowFCF}` }
   ], { formula: true });
+  const rowFCFcum = r;
   r++;
   // VAN: NPV(wacc, FCF range)
   ws.getCell(r, 1).value = 'VAN @ WACC';
@@ -1027,43 +1056,28 @@ function buildIndici(wb, R, ceMeta, spMeta, rfMeta) {
       { type: 'cellIs', operator: 'greaterThan', formulae: [5], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: COL.bad } }, font: { color: { argb: COL.badFg } } } }
     ]
   });
+
+  return { rows: { rowFCF, rowFCFcum, dscrRow, pfnEbitdaRow } };
 }
 
-/* ------------------- GRAFICI (PNG) ------------------- */
-async function buildGrafici(wb, chartImages) {
-  const ws = wb.addWorksheet('Grafici', { properties: { tabColor: { argb: COL.ingDeep } } });
+/* ------------------- GRAFICI (placeholder sheet for native chart injection) ---- */
+function buildGraficiPlaceholder(wb) {
+  const ws = wb.addWorksheet('Grafici', { properties: { tabColor: { argb: COL.teal } } });
   ws.views = [{ showGridLines: false }];
   ws.getColumn('A').width = 2;
-  for (let c = 2; c <= 14; c++) ws.getColumn(c).width = 12;
+  for (let c = 2; c <= 18; c++) ws.getColumn(c).width = 11;
+  // Force min row count so cell anchors land on existing cells
+  for (let row = 1; row <= 50; row++) ws.getRow(row).height = 18;
 
   ws.getCell('B2').value = 'Grafici riepilogativi';
   ws.getCell('B2').font = { name: 'Calibri', size: 14, bold: true, color: { argb: COL.ingDeep } };
-
-  const titles = ['Ricavi vs EBITDA vs Utile Netto', 'Free Cash Flow & Payback', 'Struttura Stato Patrimoniale', 'Indici di Sostenibilità (DSCR, PFN/EBITDA)'];
-  const positions = [
-    { startCol: 1, startRow: 4 },   // top-left  (B4)
-    { startCol: 7, startRow: 4 },   // top-right (H4)
-    { startCol: 1, startRow: 22 },  // bot-left  (B22)
-    { startCol: 7, startRow: 22 }   // bot-right (H22)
-  ];
-
-  for (let i = 0; i < chartImages.length; i++) {
-    const img = chartImages[i];
-    if (!img) continue;
-    const titleCell = ws.getCell(positions[i].startRow - 1, positions[i].startCol + 1);
-    titleCell.value = titles[i];
-    titleCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: COL.ingDeep } };
-
-    const imgId = wb.addImage({ base64: img, extension: 'png' });
-    ws.addImage(imgId, {
-      tl: { col: positions[i].startCol, row: positions[i].startRow },
-      ext: { width: 520, height: 280 }
-    });
-  }
+  ws.getCell('B3').value = 'Grafici nativi Excel — collegati ai dati di CE / SP / Indici. Modifica le ipotesi e i grafici si aggiornano automaticamente.';
+  ws.getCell('B3').font = { name: 'Calibri', size: 9, italic: true, color: { argb: COL.muted } };
+  return ws;
 }
 
 /* ------------------- ENTRYPOINT ------------------- */
-export async function exportToExcel(state, chartImages = [], logoBase64 = null) {
+export async function exportToExcel(state, _chartImages = [], logoBase64 = null) {
   const R = compute(state);
 
   const wb = new ExcelJS.Workbook();
@@ -1076,8 +1090,6 @@ export async function exportToExcel(state, chartImages = [], logoBase64 = null) 
   buildCover(wb, state, R, logoBase64);
   buildIpotesi(wb, state);
 
-  // CE prima, poi SP (SP referenza CE), poi RF (RF referenza CE+SP), poi
-  // riempiamo i placeholder cross-sheet (CE.oneri ← SP.debFin, SP.cassa ← RF.varCassa)
   const ceMeta = buildCE(wb);
   const spMeta = buildSP(wb, ceMeta);
   const rfMeta = buildRF(wb, ceMeta, spMeta);
@@ -1085,29 +1097,96 @@ export async function exportToExcel(state, chartImages = [], logoBase64 = null) 
   // Risolvi placeholder cross-sheet
   const ceWs = wb.getWorksheet('Conto Economico');
   for (let i = 1; i < Y; i++) {
-    const colLetter = yearCols[i]; // C, D, E, F (Anno 2..5)
+    const colLetter = yearCols[i];
     const cell = ceWs.getCell(`${colLetter}${ceMeta.rows.rowOneri}`);
     if (cell.value && cell.value.formula) {
       cell.value = { formula: cell.value.formula.replace('__DEBFIN_ROW__', String(spMeta.rows.rowDebFin)) };
     }
   }
   const spWs = wb.getWorksheet('Stato Patrimoniale');
-  // Cassa: C..G (anni 1..5) di SP — usano RF.varCassa
-  ['C', 'D', 'E', 'F', 'G'].forEach((c, i) => {
+  ['C', 'D', 'E', 'F', 'G'].forEach((c) => {
     const cell = spWs.getCell(`${c}${spMeta.rows.rowCassa}`);
     if (cell.value && cell.value.formula) {
       cell.value = { formula: cell.value.formula.replace('__RF_VARCASSA_ROW__', String(rfMeta.rows.rfVarCassa)) };
     }
   });
 
-  buildIndici(wb, R, ceMeta, spMeta, rfMeta);
-  await buildGrafici(wb, chartImages);
-
-  // Riordina i fogli: Cover, Ipotesi, CE, SP, RF, Indici, Grafici
-  // (sono già aggiunti in ordine, ok)
+  const idMeta = buildIndici(wb, R, ceMeta, spMeta, rfMeta);
+  buildGraficiPlaceholder(wb);
 
   const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+  // -------- Native chart injection ----------
+  const yearLabels = ['Anno 1', 'Anno 2', 'Anno 3', 'Anno 4', 'Anno 5'];
+  const HEADER_ROW = 3;
+  const palette = CHART_PALETTE;
+
+  const chartXmls = [
+    {
+      xml: makeChartXml_RicaviEbitdaUtile({
+        ceSheetName: 'Conto Economico',
+        headerRow: HEADER_ROW,
+        rowRic: ceMeta.rows.rowRic,
+        rowEbitda: ceMeta.rows.rowEbitda,
+        rowUtile: ceMeta.rows.rowUtile,
+        yearLabels,
+        ricavi: R.CE.map((c) => c.ricavi),
+        ebitda: R.CE.map((c) => c.ebitda),
+        utile:  R.CE.map((c) => c.utile),
+        palette
+      }),
+      position: { fromCol: 1, fromRow: 5,  toCol: 9,  toRow: 22 }
+    },
+    {
+      xml: makeChartXml_FCF({
+        indSheetName: 'Indici',
+        headerRow: HEADER_ROW,
+        rowFCF: idMeta.rows.rowFCF,
+        rowFCFcum: idMeta.rows.rowFCFcum,
+        yearLabels,
+        fcf: R.FCF,
+        fcfcum: R.FCFcum,
+        palette
+      }),
+      position: { fromCol: 9, fromRow: 5,  toCol: 17, toRow: 22 }
+    },
+    {
+      xml: makeChartXml_StatoPatrimoniale({
+        spSheetName: 'Stato Patrimoniale',
+        headerRow: HEADER_ROW,
+        rowPN:    spMeta.rows.rowPN,
+        rowDebFin: spMeta.rows.rowDebFin,
+        rowDebTot: spMeta.rows.rowDebOther,
+        rowCassa: spMeta.rows.rowCassa,
+        yearLabels,
+        pn:     R.SP.map((s) => s.PN),
+        debFin: R.SP.map((s) => s.debFin),
+        debTot: R.SP.map((s) => s.debComm + s.debIVA + s.debTrib),
+        cassa:  R.SP.map((s) => s.cassa),
+        palette
+      }),
+      position: { fromCol: 1, fromRow: 24, toCol: 9,  toRow: 41 }
+    },
+    {
+      xml: makeChartXml_DSCRpfn({
+        indSheetName: 'Indici',
+        headerRow: HEADER_ROW,
+        rowDSCR: idMeta.rows.dscrRow,
+        rowPFNebitda: idMeta.rows.pfnEbitdaRow,
+        yearLabels,
+        dscr: R.ID.map((d) => d.DSCR),
+        pfnEbitda: R.ID.map((d) => d.pfnEbitda),
+        palette
+      }),
+      position: { fromCol: 9, fromRow: 24, toCol: 17, toRow: 41 }
+    }
+  ];
+
+  const blob = await injectNativeCharts(buffer, {
+    targetSheetName: 'Grafici',
+    charts: chartXmls
+  });
+
   const today = new Date().toISOString().slice(0, 10);
   saveAs(blob, `BusinessPlan_Ingenia_${today}.xlsx`);
 }
