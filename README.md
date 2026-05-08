@@ -1,6 +1,6 @@
 # Business Plan Startup — Ingenia
 
-Dashboard interattiva (React + Vite) per la costruzione di un Business Plan a 5 anni: Conto Economico, Stato Patrimoniale, Rendiconto Finanziario e Indici di bilancio. Riscrittura ad hoc del simulatore originale di bpexcel.it con branding Ingenia.
+Dashboard interattiva (React + Vite) per la costruzione di un Business Plan a 5 anni: Conto Economico, Stato Patrimoniale, Rendiconto Finanziario e Indici di bilancio. 
 
 ## Quick start
 
