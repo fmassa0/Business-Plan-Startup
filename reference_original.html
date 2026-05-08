@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulatore Start Up — Dashboard Interattiva 5 anni</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --panel-soft:#f8fafc; --border:#e2e8f0;
+    --text:#0f172a; --muted:#64748b; --primary:#2563eb; --primary-dark:#1d4ed8;
+    --accent:#10b981; --warn:#f59e0b; --danger:#ef4444; --info:#0ea5e9;
+    --chip:#eff6ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f1f5f9;color:var(--text);line-height:1.45}
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:22px 28px;border-bottom:1px solid #1e40af;position:relative}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px}
+  header p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
+  .brand{position:absolute;top:18px;right:28px;font-size:14px;font-weight:600;letter-spacing:.3px;color:#fff;text-decoration:none;background:rgba(255,255,255,.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.25);transition:background .15s}
+  .brand:hover{background:rgba(255,255,255,.22)}
+  @media(max-width:780px){.brand{position:static;display:inline-block;margin-top:10px}}
+  .container{display:grid;grid-template-columns:380px 1fr;gap:18px;padding:18px;max-width:1600px;margin:0 auto}
+  @media(max-width:1100px){.container{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .panel h2{margin:0 0 12px;font-size:15px;letter-spacing:.3px;color:#0f172a;text-transform:uppercase;border-bottom:2px solid var(--primary);padding-bottom:8px;display:flex;align-items:center;gap:8px}
+  .panel h2 .num{display:inline-flex;width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;align-items:center;justify-content:center;font-size:12px}
+  .panel h3{margin:14px 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+  input[type=number],input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:#fff;color:var(--text);transition:border-color .15s,box-shadow .15s}
+  input[type=number]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .row{display:flex;gap:10px;align-items:center}
+  .btn{padding:9px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:transform .05s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:#f1f5f9}
+  .btn-danger{background:#fff;color:var(--danger);border:1px solid #fecaca}
+  .btn-danger:hover{background:#fef2f2;border-color:var(--danger)}
+  .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+  /* slider */
+  .slider-card{background:var(--panel-soft);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .slider-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px}
+  .slider-head .val{font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:4px;border:1px solid var(--border);min-width:62px;text-align:center;color:var(--primary)}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:6px;background:#e2e8f0;border-radius:3px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;height:18px;width:18px;border-radius:50%;background:var(--primary);margin-top:-6px;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  input[type=range]::-moz-range-track{height:6px;background:#e2e8f0;border-radius:3px}
+  input[type=range]::-moz-range-thumb{height:18px;width:18px;border-radius:50%;background:var(--primary);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .slider-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
+
+  /* KPI */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  @media(max-width:780px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .kpi .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .kpi .v{font-size:20px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .kpi.green .v{color:var(--accent)}
+  .kpi.blue .v{color:var(--primary)}
+  .kpi.amber .v{color:var(--warn)}
+  .kpi.red .v{color:var(--danger)}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #f1f5f9;font-variant-numeric:tabular-nums;white-space:nowrap}
+  th{background:#f8fafc;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;font-size:11px;border-bottom:2px solid var(--border)}
+  th:first-child,td:first-child{text-align:left;font-variant-numeric:normal;white-space:normal}
+  tr.section td{background:#1e3a8a;color:#fff;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.5px;padding:6px 10px}
+  tr.section td:first-child{text-align:left}
+  tr.subtotal td{background:#eff6ff;font-weight:700}
+  tr.bold td{font-weight:700;background:#f0fdf4}
+  tr.indent td:first-child{padding-left:20px}
+  tr.warn td{background:#fef2f2}
+  td.neg{color:var(--danger)}
+  td.pos{color:var(--accent)}
+  td.muted{color:var(--muted)}
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:18px;background:#fff}
+  .scenario-tag{display:inline-block;background:var(--chip);color:var(--primary);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px}
+
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  @media(max-width:780px){.chart-grid{grid-template-columns:1fr}}
+  .chart-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .chart-box h4{margin:0 0 10px;font-size:13px;color:var(--text)}
+  .chart-box canvas{max-height:240px}
+
+  .help{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+  .pill-ok{background:#dcfce7;color:#166534}
+  .pill-warn{background:#fef3c7;color:#92400e}
+  .pill-bad{background:#fee2e2;color:#991b1b}
+
+  .footer{padding:14px 28px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border);background:#fff;margin-top:20px}
+
+  details{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:#fff}
+  details>summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:13px;color:var(--text);user-select:none}
+  details>summary:hover{background:#f8fafc}
+  details[open]>summary{border-bottom:1px solid var(--border)}
+  details .body{padding:12px}
+
+  .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .check{font-size:11px;padding:3px 9px;border-radius:14px;background:#f1f5f9;color:var(--muted);font-weight:600}
+
+  @media print{
+    .panel.controls,.no-print{display:none!important}
+    .container{grid-template-columns:1fr;padding:0}
+    body{background:#fff}
+    .chart-grid{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="https://www.bpexcel.it" target="_blank" rel="noopener" class="brand" title="Vai al sito www.bpexcel.it">www.bpexcel.it</a>
+  <h1>Simulatore Start Up — Dashboard Interattiva (5 anni)</h1>
+  <p>Inserisci i valori base e usa gli slider per simulare scenari what-if in tempo reale. Conto Economico, Stato Patrimoniale, Rendiconto Finanziario e Indici si ricalcolano automaticamente.</p>
+</header>
+
+<div class="container">
+  <!-- ========== SIDEBAR INPUTS ========== -->
+  <aside class="panel controls" id="controls">
+    <h2><span class="num">1</span>Ipotesi base &amp; Crescita</h2>
+
+    <details open>
+      <summary>Ricavi — Volumi e Prezzi (Anno 1)</summary>
+      <div class="body">
+        <div class="grid2">
+          <div><label>Volumi venduti (pz)</label><input type="number" id="i_vol" value="1000" step="100"></div>
+          <div><label>Prezzo unitario (€)</label><input type="number" id="i_prc" value="100" step="1"></div>
+          <div><label>Crescita volumi %/anno</label><input type="number" id="g_vol" value="20" step="1"></div>
+          <div><label>Crescita prezzo %/anno</label><input type="number" id="g_prc" value="2" step="0.5"></div>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Costi Variabili</summary>
+      <div class="body">
+        <div class="grid2">
+          <div><label>Costo unit. variab. (€/pz)</label><input type="number" id="i_cuv" value="40" step="1"></div>
+          <div><label>Crescita costo unit. %/anno</label><input type="number" id="g_cuv" value="1" step="0.5"></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Costi Fissi Operativi (Anno 1)</summary>
+      <div class="body">
+        <div class="grid2">
+          <div><label>Personale (€)</label><input type="number" id="i_pers" value="40000" step="1000"></div>
+          <div><label>Affitto / utenze (€)</label><input type="number" id="i_aff" value="12000" step="500"></div>
+          <div><label>Marketing (€)</label><input type="number" id="i_mkt" value="10000" step="500"></div>
+          <div><label>Servizi/consulenze (€)</label><input type="number" id="i_serv" value="6000" step="500"></div>
+          <div><label>Altri costi fissi (€)</label><input type="number" id="i_alt" value="3000" step="500"></div>
+          <div><label>Crescita costi fissi %/anno</label><input type="number" id="g_cf" value="3" step="0.5"></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Investimenti &amp; Ammortamenti</summary>
+      <div class="body">
+        <h3>Materiali</h3>
+        <div class="grid5">
+          <div><label>Y1</label><input type="number" id="im1" value="50000" step="1000"></div>
+          <div><label>Y2</label><input type="number" id="im2" value="0" step="1000"></div>
+          <div><label>Y3</label><input type="number" id="im3" value="10000" step="1000"></div>
+          <div><label>Y4</label><input type="number" id="im4" value="0" step="1000"></div>
+          <div><label>Y5</label><input type="number" id="im5" value="0" step="1000"></div>
+        </div>
+        <label style="margin-top:6px">Aliquota amm. materiali %</label>
+        <input type="number" id="aliq_m" value="20" step="1">
+        <h3>Immateriali</h3>
+        <div class="grid5">
+          <div><label>Y1</label><input type="number" id="ii1" value="15000" step="500"></div>
+          <div><label>Y2</label><input type="number" id="ii2" value="0" step="500"></div>
+          <div><label>Y3</label><input type="number" id="ii3" value="0" step="500"></div>
+          <div><label>Y4</label><input type="number" id="ii4" value="0" step="500"></div>
+          <div><label>Y5</label><input type="number" id="ii5" value="0" step="500"></div>
+        </div>
+        <label style="margin-top:6px">Aliquota amm. immateriali %</label>
+        <input type="number" id="aliq_i" value="33" step="1">
+      </div>
+    </details>
+
+    <details>
+      <summary>Capitale Circolante (giorni)</summary>
+      <div class="body">
+        <div class="grid3">
+          <div><label>DSO clienti</label><input type="number" id="dso" value="60" step="5"></div>
+          <div><label>DPO fornitori</label><input type="number" id="dpo" value="60" step="5"></div>
+          <div><label>DIO scorte</label><input type="number" id="dio" value="30" step="5"></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>IVA</summary>
+      <div class="body">
+        <div class="grid3">
+          <div><label>IVA vendite %</label><input type="number" id="iva_v" value="22" step="1"></div>
+          <div><label>IVA acquisti %</label><input type="number" id="iva_a" value="22" step="1"></div>
+          <div><label>Periodicità (mese)</label><input type="number" id="iva_p" value="3" step="1"></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Finanziamenti &amp; Equity</summary>
+      <div class="body">
+        <h3>Apporto Equity (€)</h3>
+        <div class="grid5">
+          <div><label>Y1</label><input type="number" id="eq1" value="50000" step="1000"></div>
+          <div><label>Y2</label><input type="number" id="eq2" value="0"></div>
+          <div><label>Y3</label><input type="number" id="eq3" value="0"></div>
+          <div><label>Y4</label><input type="number" id="eq4" value="0"></div>
+          <div><label>Y5</label><input type="number" id="eq5" value="0"></div>
+        </div>
+        <h3>Nuovo Debito Bancario (€)</h3>
+        <div class="grid5">
+          <div><label>Y1</label><input type="number" id="db1" value="40000" step="1000"></div>
+          <div><label>Y2</label><input type="number" id="db2" value="0"></div>
+          <div><label>Y3</label><input type="number" id="db3" value="0"></div>
+          <div><label>Y4</label><input type="number" id="db4" value="0"></div>
+          <div><label>Y5</label><input type="number" id="db5" value="0"></div>
+        </div>
+        <h3>Rimborso Quota Capitale (€)</h3>
+        <div class="grid5">
+          <div><label>Y1</label><input type="number" id="rb1" value="8000"></div>
+          <div><label>Y2</label><input type="number" id="rb2" value="8000"></div>
+          <div><label>Y3</label><input type="number" id="rb3" value="8000"></div>
+          <div><label>Y4</label><input type="number" id="rb4" value="8000"></div>
+          <div><label>Y5</label><input type="number" id="rb5" value="8000"></div>
+        </div>
+        <label style="margin-top:6px">Tasso interesse sul debito %</label>
+        <input type="number" id="tasso" value="6" step="0.1">
+      </div>
+    </details>
+
+    <details>
+      <summary>Fiscalità &amp; WACC</summary>
+      <div class="body">
+        <div class="grid3">
+          <div><label>Aliquota IRES %</label><input type="number" id="ires" value="24" step="0.5"></div>
+          <div><label>Aliquota IRAP %</label><input type="number" id="irap" value="3.9" step="0.1"></div>
+          <div><label>WACC %</label><input type="number" id="wacc" value="8" step="0.5"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnRecalc">Ricalcola</button>
+      <button class="btn btn-ghost" id="btnReset">Reset esempio</button>
+      <button class="btn btn-danger" id="btnClear" title="Azzera tutti i campi (sostituisce tutti i valori con 0)">Azzera tutti gli input</button>
+      <button class="btn btn-ghost no-print" id="btnPrint">Stampa / PDF</button>
+    </div>
+    <p class="help" style="margin-top:10px">I calcoli si aggiornano automaticamente ad ogni modifica. Tutti i valori sono in € a parità di potere d'acquisto. Modello didattico — non sostituisce un parere professionale.</p>
+    <p class="help" style="margin-top:6px"><strong>Reset esempio</strong>: ripristina i valori dell'esempio iniziale. <strong>Azzera tutti gli input</strong>: porta a 0 tutti i campi per partire da una pagina bianca con i tuoi dati.</p>
+  </aside>
+
+  <!-- ========== MAIN OUTPUT ========== -->
+  <main>
+    <!-- WHAT-IF SLIDERS -->
+    <section class="panel" style="margin-bottom:18px">
+      <h2><span class="num">2</span>What-if — Scenari Rapidi <span class="scenario-tag" id="scTag">Base</span></h2>
+      <div class="grid2">
+        <div class="slider-card">
+          <div class="slider-head"><span>Prezzo di vendita</span><span class="val" id="vPrc">+0%</span></div>
+          <input type="range" id="sPrc" min="-50" max="50" value="0" step="1">
+          <div class="slider-foot"><span>-50%</span><span>0</span><span>+50%</span></div>
+        </div>
+        <div class="slider-card">
+          <div class="slider-head"><span>Volumi venduti</span><span class="val" id="vVol">+0%</span></div>
+          <input type="range" id="sVol" min="-50" max="50" value="0" step="1">
+          <div class="slider-foot"><span>-50%</span><span>0</span><span>+50%</span></div>
+        </div>
+        <div class="slider-card">
+          <div class="slider-head"><span>Costo variabile unitario</span><span class="val" id="vCuv">+0%</span></div>
+          <input type="range" id="sCuv" min="-50" max="50" value="0" step="1">
+          <div class="slider-foot"><span>-50%</span><span>0</span><span>+50%</span></div>
+        </div>
+        <div class="slider-card">
+          <div class="slider-head"><span>Costi fissi totali</span><span class="val" id="vCf">+0%</span></div>
+          <input type="range" id="sCf" min="-50" max="50" value="0" step="1">
+          <div class="slider-foot"><span>-50%</span><span>0</span><span>+50%</span></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" data-preset="base">Caso Base</button>
+        <button class="btn btn-ghost" data-preset="best">Best Case (+15% prezzo, +20% vol)</button>
+        <button class="btn btn-ghost" data-preset="worst">Worst Case (-15% prezzo, -20% vol)</button>
+        <button class="btn btn-ghost" data-preset="cost">Stress Costi (+15% costi)</button>
+      </div>
+    </section>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-row">
+      <div class="kpi blue"><div class="lbl">Ricavi 5° anno</div><div class="v" id="kRic">—</div><div class="sub" id="kRicCagr">CAGR —</div></div>
+      <div class="kpi green"><div class="lbl">EBITDA cumulato</div><div class="v" id="kEbi">—</div><div class="sub" id="kEbiMar">Margine medio —</div></div>
+      <div class="kpi amber"><div class="lbl">VAN @ WACC</div><div class="v" id="kNpv">—</div><div class="sub" id="kIrr">TIR —</div></div>
+      <div class="kpi red"><div class="lbl">PFN/EBITDA Y5</div><div class="v" id="kPfn">—</div><div class="sub" id="kPfnFlag">—</div></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="chart-grid">
+      <div class="chart-box"><h4>Ricavi vs EBITDA vs Utile Netto</h4><canvas id="chRev"></canvas></div>
+      <div class="chart-box"><h4>Free Cash Flow cumulato &amp; Payback</h4><canvas id="chFcf"></canvas></div>
+      <div class="chart-box"><h4>Struttura Stato Patrimoniale</h4><canvas id="chSp"></canvas></div>
+      <div class="chart-box"><h4>Indici di Sostenibilità (DSCR, PFN/EBITDA)</h4><canvas id="chInd"></canvas></div>
+    </div>
+
+    <!-- CONTO ECONOMICO -->
+    <h2 style="margin:18px 0 10px;font-size:15px;color:#0f172a;letter-spacing:.3px;text-transform:uppercase">Conto Economico Previsionale</h2>
+    <div class="table-wrap"><table id="tblCE"></table></div>
+
+    <!-- STATO PATRIMONIALE -->
+    <h2 style="margin:18px 0 10px;font-size:15px;color:#0f172a;letter-spacing:.3px;text-transform:uppercase">Stato Patrimoniale Previsionale</h2>
+    <div class="table-wrap"><table id="tblSP"></table></div>
+
+    <!-- RENDICONTO -->
+    <h2 style="margin:18px 0 10px;font-size:15px;color:#0f172a;letter-spacing:.3px;text-transform:uppercase">Rendiconto Finanziario (metodo indiretto)</h2>
+    <div class="table-wrap"><table id="tblRF"></table></div>
+
+    <!-- INDICI -->
+    <h2 style="margin:18px 0 10px;font-size:15px;color:#0f172a;letter-spacing:.3px;text-transform:uppercase">Indici di Bilancio &amp; Valutazione del Progetto</h2>
+    <div class="table-wrap"><table id="tblID"></table></div>
+
+  </main>
+</div>
+
+<div class="footer no-print">
+  Modello didattico basato sulla struttura "Simulatore Start Up". Logica di calcolo: ipotesi → CE → SP → RF → indici. Per banche, bandi (PNRR/Invitalia/Simest), investitori — sempre da validare con un consulente.
+</div>
+
+<script>
+/* ============================================================
+   MOTORE DI CALCOLO — segue le formule del file Excel originale
+   ============================================================ */
+const Y = 5; // orizzonte 5 anni
+const fmt = (n,d=0)=> isFinite(n)? new Intl.NumberFormat('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n):'—';
+const fmtE = (n,d=0)=> '€ '+fmt(n,d);
+const fmtP = (n)=> isFinite(n)? (n*100).toFixed(1)+'%':'—';
+const $ = id => document.getElementById(id);
+
+function readInputs(){
+  const num = id => parseFloat($(id).value)||0;
+  return {
+    vol: num('i_vol'), prc: num('i_prc'), cuv: num('i_cuv'),
+    g_vol: num('g_vol')/100, g_prc: num('g_prc')/100, g_cuv: num('g_cuv')/100,
+    pers: num('i_pers'), aff: num('i_aff'), mkt: num('i_mkt'), serv: num('i_serv'), alt: num('i_alt'),
+    g_cf: num('g_cf')/100,
+    inv_m: [num('im1'),num('im2'),num('im3'),num('im4'),num('im5')],
+    inv_i: [num('ii1'),num('ii2'),num('ii3'),num('ii4'),num('ii5')],
+    aliq_m: num('aliq_m')/100, aliq_i: num('aliq_i')/100,
+    dso: num('dso'), dpo: num('dpo'), dio: num('dio'),
+    iva_v: num('iva_v')/100, iva_a: num('iva_a')/100, iva_p: num('iva_p'),
+    eq: [num('eq1'),num('eq2'),num('eq3'),num('eq4'),num('eq5')],
+    db: [num('db1'),num('db2'),num('db3'),num('db4'),num('db5')],
+    rb: [num('rb1'),num('rb2'),num('rb3'),num('rb4'),num('rb5')],
+    tasso: num('tasso')/100,
+    ires: num('ires')/100, irap: num('irap')/100,
+    wacc: num('wacc')/100,
+    /* sliders */
+    s_prc: parseFloat($('sPrc').value)/100,
+    s_vol: parseFloat($('sVol').value)/100,
+    s_cuv: parseFloat($('sCuv').value)/100,
+    s_cf:  parseFloat($('sCf').value)/100
+  };
+}
+
+function compute(inp){
+  // -------- Ipotesi anno per anno (con crescita) --------
+  const anni = [];
+  for(let y=0; y<Y; y++){
+    const vol = inp.vol * Math.pow(1+inp.g_vol, y) * (1+inp.s_vol);
+    const prc = inp.prc * Math.pow(1+inp.g_prc, y) * (1+inp.s_prc);
+    const cuv = inp.cuv * Math.pow(1+inp.g_cuv, y) * (1+inp.s_cuv);
+    const cf_mult = Math.pow(1+inp.g_cf, y) * (1+inp.s_cf);
+    const pers = inp.pers*cf_mult, aff=inp.aff*cf_mult, mkt=inp.mkt*cf_mult, serv=inp.serv*cf_mult, alt=inp.alt*cf_mult;
+    const ricavi = vol*prc;
+    const cVar = vol*cuv;
+    const totCF = pers+aff+mkt+serv+alt;
+    anni.push({vol,prc,cuv,ricavi,cVar,pers,aff,mkt,serv,alt,totCF});
+  }
+
+  // -------- CE (CE!) --------
+  // Ammortamenti: per anno y -> sum_{i=0..y} inv_i * aliq (aliquota costante per semplicità - se varia per anno, il modello Excel usa colonne)
+  const ammMat=[], ammImm=[];
+  for(let y=0; y<Y; y++){
+    let am=0, ai=0;
+    for(let k=0;k<=y;k++){
+      am += inp.inv_m[k]*inp.aliq_m;
+      ai += inp.inv_i[k]*inp.aliq_i;
+    }
+    ammMat.push(am); ammImm.push(ai);
+  }
+  const aliq_tot = inp.ires + inp.irap;
+
+  // Iteriamo: oneri finanziari dipendono dal saldo debito a inizio anno -> debito anno y-1 (chiusura)
+  // Calcoliamo CE/SP/RF in sequenza per anno
+  const CE=[], SP=[], RF=[];
+  let openDebt = 0; // debito finanziario apertura (anno 0 = 0)
+  let openCash = 0; // cassa apertura
+  let openImmMat=0, openImmImmat=0, openFAmmMat=0, openFAmmImm=0;
+  let openCap=0, openUtNuovo=0;
+  let openRimanenze=0, openCrediti=0, openDebComm=0, openDebIVA=0, openDebTrib=0;
+  let prevUtile=0;
+
+  for(let y=0; y<Y; y++){
+    const a = anni[y];
+
+    // CE
+    const mdc = a.ricavi - a.cVar;
+    const mdcPct = a.ricavi? mdc/a.ricavi : 0;
+    const ebitda = mdc - a.totCF;
+    const ebitdaMar = a.ricavi? ebitda/a.ricavi : 0;
+    const ammM = ammMat[y], ammI = ammImm[y];
+    const ebit = ebitda - ammM - ammI;
+    const ebitMar = a.ricavi? ebit/a.ricavi : 0;
+    const oneriFin = -openDebt * inp.tasso; // oneri negativi
+    const rai = ebit + oneriFin;
+    const imposte = -Math.max(rai,0)*aliq_tot;
+    const utile = rai + imposte;
+
+    CE.push({ricavi:a.ricavi,cVar:-a.cVar,mdc,mdcPct,
+      pers:-a.pers,aff:-a.aff,mkt:-a.mkt,serv:-a.serv,alt:-a.alt,
+      totCF:-a.totCF, ebitda,ebitdaMar,ammMat:-ammM,ammImm:-ammI,
+      ebit,ebitMar,oneriFin,rai,imposte,utile});
+
+    // SP fine anno y (Anno 1 = primo anno operativo)
+    const immMatLordo = openImmMat + inp.inv_m[y];
+    const fAmmMat = openFAmmMat + ammM;
+    const immMatNetto = immMatLordo - fAmmMat;
+
+    const immImmatLordo = openImmImmat + inp.inv_i[y];
+    const fAmmImm = openFAmmImm + ammI;
+    const immImmatNetto = immImmatLordo - fAmmImm;
+
+    const totImm = immMatNetto + immImmatNetto;
+
+    const rimanenze = a.cVar * inp.dio / 365;
+    const crediti = a.ricavi * (1+inp.iva_v) * inp.dso / 365;
+    const credIVA = 0;
+
+    // Debiti finanziari fine anno
+    const debFin = openDebt + inp.db[y] - inp.rb[y];
+
+    const debComm = a.cVar * (1+inp.iva_a) * inp.dpo / 365;
+    const debIVA = (a.ricavi*inp.iva_v - a.cVar*inp.iva_a) * inp.iva_p / 12;
+    // Debiti tributari fine anno y = -CE.imposte[y-1] (Excel: SP!C33 = -CE!B30 cioè anno 1 SP usa anno 1 CE imposte... rileggo)
+    // Excel: SP colonna C = anno 1, =-CE!B30 (CE colonna B = anno 1). Quindi Deb_trib fine anno 1 = -imposte anno 1 (tasse correnti da pagare)
+    const debTrib = -imposte; // imposte è negativa, quindi debTrib è positivo
+    const altriDeb = 0;
+
+    // CCN var
+    const varRim = -(rimanenze - openRimanenze);
+    const varCre = -(crediti - openCrediti);
+    const varDebC = (debComm - openDebComm);
+    const varDebIVA = (debIVA - openDebIVA);
+    const varDebTrib = (debTrib - openDebTrib);
+    const pagOneri = oneriFin; // negativo
+    const flussoPreCCN = utile + (-(-ammM - ammI)) + (-oneriFin); // = utile + amm + (-oneriFin)
+    // riformulazione esplicita come Excel: utile + ammortamenti(positivi) + oneri_sterilizzati(positivi)
+    // utile + (ammM+ammI) + (-oneriFin)
+    const flussoPreCCN_v2 = utile + (ammM+ammI) + (-oneriFin);
+    const flussoOp = flussoPreCCN_v2 + varRim + varCre + varDebC + varDebIVA + pagOneri + varDebTrib;
+
+    const flussoInv = -(inp.inv_m[y] + inp.inv_i[y]);
+    const flussoFin = inp.eq[y] + inp.db[y] - inp.rb[y];
+    const varCassa = flussoOp + flussoInv + flussoFin;
+    const cassa = openCash + varCassa;
+
+    // Capitale Sociale
+    const cap = openCap + inp.eq[y];
+    const utNuovo = openUtNuovo + prevUtile; // riserva da utili anni precedenti
+    const PN = cap + utNuovo + utile;
+
+    const totAttivoCirc = rimanenze + crediti + credIVA + cassa;
+    const totAttivo = totImm + totAttivoCirc;
+    const totPassCorr = debComm + debIVA + debTrib + altriDeb;
+    const totPassivo = debFin + debComm + debIVA + debTrib + altriDeb;
+    const totPP = PN + totPassivo;
+    const quad = totAttivo - totPP;
+
+    SP.push({immMatLordo,fAmmMat,immMatNetto,immImmatLordo,fAmmImm,immImmatNetto,totImm,
+      rimanenze,crediti,credIVA,cassa,totAttivoCirc,totAttivo,
+      cap,utNuovo,utile,PN,debFin,debComm,debIVA,debTrib,altriDeb,totPassivo,totPassCorr,totPP,quad});
+
+    RF.push({utile,amm:ammM+ammI,oneriSter:-oneriFin,preCCN:flussoPreCCN_v2,
+      varRim,varCre,varDebC,varDebIVA,pagOneri,varDebTrib,
+      flussoOp,flussoInv,flussoFin,varCassa,cassaIn:openCash,cassaFin:cassa});
+
+    // aggiorna openings
+    openDebt = debFin;
+    openCash = cassa;
+    openImmMat = immMatLordo;
+    openImmImmat = immImmatLordo;
+    openFAmmMat = fAmmMat;
+    openFAmmImm = fAmmImm;
+    openCap = cap;
+    // Excel: SP!C27 = B27 + B28 = utili a nuovo[y-1] + utile_esercizio[y-1]. Nel ns. modello, utNuovo[y] = openUtNuovo + prevUtile.
+    // Quindi all'apertura del prossimo anno: openUtNuovo = utNuovo (corrente, fine anno y) + 0 oppure openUtNuovo = utNuovo + utile? Rileggo.
+    // Excel: SP[anno 0].UtilePerg = 0, SP[anno 0].UtileEs = 0
+    // SP[anno 1].UtilePerg = SP[anno 0].UtilePerg + SP[anno 0].UtileEs = 0
+    // SP[anno 1].UtileEs = CE[anno 1].Utile
+    // SP[anno 2].UtilePerg = SP[anno 1].UtilePerg + SP[anno 1].UtileEs
+    // Quindi a fine anno y: utNuovo cresce per utile esercizio anno y nel passaggio al successivo
+    openUtNuovo = utNuovo + utile; // questo diventa l'apertura del prossimo
+    // ATTENZIONE: il mio codice salva utNuovo = openUtNuovo + prevUtile, dove prevUtile=0 al primo anno -> ok
+    prevUtile = 0; // ho già aggregato in openUtNuovo
+    openRimanenze = rimanenze; openCrediti = crediti; openDebComm = debComm; openDebIVA = debIVA; openDebTrib = debTrib;
+  }
+
+  // -------- INDICI --------
+  const ID = [];
+  for(let y=0;y<Y;y++){
+    const ce = CE[y], sp = SP[y];
+    const ebitda = ce.ebitda;
+    const utile = ce.utile;
+    const PN = sp.PN;
+    const ROI = (sp.totImm + sp.rimanenze + sp.crediti - sp.debComm) ? ce.ebit/(sp.totImm + sp.rimanenze + sp.crediti - sp.debComm) : 0;
+    const ROE = PN ? utile/PN : 0;
+    const ROS = ce.ricavi ? utile/ce.ricavi : 0;
+    const PFN = sp.debFin - sp.cassa;
+    const pfnEbitda = ebitda ? PFN/ebitda : 0;
+    const leva = PN ? sp.debFin/PN : 0;
+    const indip = sp.totAttivo ? PN/sp.totAttivo : 0;
+    const currR = sp.totPassCorr ? sp.totAttivoCirc/sp.totPassCorr : 0;
+    const quickR = sp.totPassCorr ? (sp.totAttivoCirc - sp.rimanenze)/sp.totPassCorr : 0;
+    const ciclo = inp.dso + inp.dio - inp.dpo;
+    const dscrSrv = (inp.rb[y] + (-ce.oneriFin));
+    const DSCR = dscrSrv ? RF[y].flussoOp/dscrSrv : 0;
+    const copOF = ce.oneriFin ? ebitda/(-ce.oneriFin) : 0;
+    const BEP = ce.mdcPct ? (-ce.totCF)/ce.mdcPct : 0;
+    const margSic = ce.ricavi ? (ce.ricavi - BEP)/ce.ricavi : 0;
+    ID.push({ROI,ROE,ROS,PFN,pfnEbitda,leva,indip,currR,quickR,ciclo,DSCR,copOF,BEP,margSic});
+  }
+
+  // -------- VALUTAZIONE --------
+  const FCF = CE.map((_,y)=> RF[y].flussoOp + RF[y].flussoInv);
+  let NPV=0;
+  for(let y=0;y<Y;y++) NPV += FCF[y]/Math.pow(1+inp.wacc, y+1);
+
+  // IRR via bisezione su [-0.99, 5]
+  function npvAt(r){let s=0; for(let y=0;y<Y;y++) s += FCF[y]/Math.pow(1+r,y+1); return s;}
+  let IRR = NaN;
+  // tentativo solo se c'è almeno un FCF positivo e uno negativo
+  const hasNeg = FCF.some(v=>v<0), hasPos = FCF.some(v=>v>0);
+  if(hasNeg && hasPos){
+    let lo=-0.99, hi=5, fLo=npvAt(lo), fHi=npvAt(hi);
+    if(fLo*fHi<0){
+      for(let i=0;i<80;i++){
+        const m=(lo+hi)/2, fm=npvAt(m);
+        if(fm===0){IRR=m; break;}
+        if(fLo*fm<0){hi=m; fHi=fm;} else {lo=m; fLo=fm;}
+      }
+      IRR = (lo+hi)/2;
+    }
+  }
+  const FCFcum = [];
+  let cum=0; FCF.forEach(v=>{cum+=v; FCFcum.push(cum);});
+  let payback = null;
+  for(let i=0;i<FCFcum.length;i++) if(FCFcum[i]>=0){payback = i+1; break;}
+
+  return {anni,CE,SP,RF,ID,FCF,FCFcum,NPV,IRR,payback,inp};
+}
+
+/* ============================================================
+   RENDER UI
+   ============================================================ */
+const yLabels = ['Anno 1','Anno 2','Anno 3','Anno 4','Anno 5'];
+const yLabels0 = ['Anno 0', ...yLabels];
+
+function buildHeader(labels){
+  let h = '<thead><tr><th>Voce</th>';
+  labels.forEach(l=> h += `<th>${l}</th>`);
+  h += '</tr></thead>';
+  return h;
+}
+function row(label,vals,opts={}){
+  const cls = opts.class||'';
+  let h = `<tr class="${cls}"><td>${label}</td>`;
+  vals.forEach(v=>{
+    let txt = v.txt!==undefined? v.txt : (opts.fmt==='pct'? fmtP(v) : opts.fmt==='num'? fmt(v,2) : fmtE(v));
+    let extra = (typeof v==='number' && v<0 && opts.fmt!=='pct')? 'neg' : '';
+    h += `<td class="${extra}">${txt}</td>`;
+  });
+  h += '</tr>';
+  return h;
+}
+
+function renderCE(R){
+  const t = $('tblCE');
+  let h = buildHeader(yLabels);
+  h+='<tbody>';
+  h+= row('Ricavi delle vendite', R.CE.map(c=>c.ricavi));
+  h+= row('(-) Costi variabili', R.CE.map(c=>c.cVar));
+  h+= row('MARGINE DI CONTRIBUZIONE', R.CE.map(c=>c.mdc),{class:'subtotal'});
+  h+= row('MdC %', R.CE.map(c=>c.mdcPct),{fmt:'pct',class:'muted'});
+  h+= `<tr class="section"><td colspan="${Y+1}">Costi Fissi</td></tr>`;
+  h+= row('(-) Personale', R.CE.map(c=>c.pers),{class:'indent'});
+  h+= row('(-) Affitto / utenze', R.CE.map(c=>c.aff),{class:'indent'});
+  h+= row('(-) Marketing / vendite', R.CE.map(c=>c.mkt),{class:'indent'});
+  h+= row('(-) Servizi e consulenze', R.CE.map(c=>c.serv),{class:'indent'});
+  h+= row('(-) Altri costi fissi', R.CE.map(c=>c.alt),{class:'indent'});
+  h+= row('Totale costi fissi', R.CE.map(c=>c.totCF),{class:'subtotal'});
+  h+= row('EBITDA (MOL)', R.CE.map(c=>c.ebitda),{class:'bold'});
+  h+= row('EBITDA margin %', R.CE.map(c=>c.ebitdaMar),{fmt:'pct',class:'muted'});
+  h+= row('(-) Ammortamenti materiali', R.CE.map(c=>c.ammMat));
+  h+= row('(-) Ammortamenti immateriali', R.CE.map(c=>c.ammImm));
+  h+= row('EBIT (Reddito Operativo)', R.CE.map(c=>c.ebit),{class:'bold'});
+  h+= row('EBIT margin %', R.CE.map(c=>c.ebitMar),{fmt:'pct',class:'muted'});
+  h+= row('(-) Oneri finanziari', R.CE.map(c=>c.oneriFin));
+  h+= row('Risultato ante imposte', R.CE.map(c=>c.rai),{class:'subtotal'});
+  h+= row('(-) Imposte (IRES+IRAP)', R.CE.map(c=>c.imposte));
+  h+= row('UTILE / (PERDITA) NETTA', R.CE.map(c=>c.utile),{class:'bold'});
+  h+='</tbody>';
+  t.innerHTML = h;
+}
+
+function renderSP(R){
+  const t = $('tblSP');
+  let h = buildHeader(yLabels0);
+  h+='<tbody>';
+  const z = (v)=>({txt: fmtE(v||0)});
+  h+= `<tr class="section"><td colspan="${Y+2}">ATTIVO</td></tr>`;
+  h+= `<tr><td>Imm. materiali (lordo)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.immMatLordo)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>F.do amm. materiali</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.fAmmMat)}</td>`).join('')}</tr>`;
+  h+= `<tr class="subtotal"><td>Imm. materiali nette</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.immMatNetto)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Imm. immateriali (lordo)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.immImmatLordo)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>F.do amm. immateriali</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.fAmmImm)}</td>`).join('')}</tr>`;
+  h+= `<tr class="subtotal"><td>Imm. immateriali nette</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.immImmatNetto)}</td>`).join('')}</tr>`;
+  h+= `<tr class="bold"><td>TOTALE ATTIVO IMMOBILIZZATO</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.totImm)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Rimanenze</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.rimanenze)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Crediti commerciali (IVA incl.)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.crediti)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Liquidità (cassa e banche)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.cassa)}</td>`).join('')}</tr>`;
+  h+= `<tr class="subtotal"><td>TOTALE ATTIVO CIRCOLANTE</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.totAttivoCirc)}</td>`).join('')}</tr>`;
+  h+= `<tr class="bold"><td>TOTALE ATTIVO</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.totAttivo)}</td>`).join('')}</tr>`;
+  h+= `<tr class="section"><td colspan="${Y+2}">PASSIVO E PATRIMONIO NETTO</td></tr>`;
+  h+= `<tr><td>Capitale sociale</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.cap)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Utili / (perdite) a nuovo</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.utNuovo)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Utile / (perdita) d'esercizio</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.utile)}</td>`).join('')}</tr>`;
+  h+= `<tr class="bold"><td>TOTALE PATRIMONIO NETTO</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.PN)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Debiti finanziari</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.debFin)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Debiti commerciali (IVA incl.)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.debComm)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Debito IVA verso Erario</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.debIVA)}</td>`).join('')}</tr>`;
+  h+= `<tr><td>Debiti tributari</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.debTrib)}</td>`).join('')}</tr>`;
+  h+= `<tr class="subtotal"><td>TOTALE PASSIVO</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.totPassivo)}</td>`).join('')}</tr>`;
+  h+= `<tr class="bold"><td>TOTALE P + PN</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.totPP)}</td>`).join('')}</tr>`;
+  h+= `<tr class="muted"><td>Quadratura (Att - P&PN)</td><td>${fmtE(0)}</td>${R.SP.map(s=>`<td>${fmtE(s.quad)}</td>`).join('')}</tr>`;
+  h+='</tbody>';
+  t.innerHTML = h;
+}
+
+function renderRF(R){
+  const t = $('tblRF');
+  let h = buildHeader(yLabels);
+  h+='<tbody>';
+  h+= `<tr class="section"><td colspan="${Y+1}">A) Gestione Operativa</td></tr>`;
+  h+= row("Utile / (perdita) d'esercizio", R.RF.map(r=>r.utile));
+  h+= row('(+) Ammortamenti (sterilizzati)', R.RF.map(r=>r.amm));
+  h+= row('(+) Oneri finanziari (sterilizzati)', R.RF.map(r=>r.oneriSter));
+  h+= row('Flusso prima del CCN', R.RF.map(r=>r.preCCN),{class:'subtotal'});
+  h+= row('(-) Δ Rimanenze', R.RF.map(r=>r.varRim));
+  h+= row('(-) Δ Crediti commerciali', R.RF.map(r=>r.varCre));
+  h+= row('(+) Δ Debiti commerciali', R.RF.map(r=>r.varDebC));
+  h+= row('(+) Δ Debito IVA', R.RF.map(r=>r.varDebIVA));
+  h+= row('(-) Pagamento oneri finanziari', R.RF.map(r=>r.pagOneri));
+  h+= row('(+) Δ Debiti tributari', R.RF.map(r=>r.varDebTrib));
+  h+= row('FLUSSO GESTIONE OPERATIVA', R.RF.map(r=>r.flussoOp),{class:'bold'});
+  h+= `<tr class="section"><td colspan="${Y+1}">B) Gestione Investimenti</td></tr>`;
+  h+= row('(-) Investimenti mat. e immat.', R.RF.map(r=>r.flussoInv));
+  h+= row('FLUSSO INVESTIMENTI', R.RF.map(r=>r.flussoInv),{class:'subtotal'});
+  h+= `<tr class="section"><td colspan="${Y+1}">C) Gestione Finanziaria</td></tr>`;
+  h+= row('Apporti equity / debito - rimborsi', R.RF.map(r=>r.flussoFin));
+  h+= row('FLUSSO FINANZIARIO', R.RF.map(r=>r.flussoFin),{class:'subtotal'});
+  h+= row('VARIAZIONE NETTA DI CASSA', R.RF.map(r=>r.varCassa),{class:'bold'});
+  h+= row('Cassa iniziale', R.RF.map(r=>r.cassaIn));
+  h+= row('CASSA FINALE', R.RF.map(r=>r.cassaFin),{class:'bold'});
+  h+='</tbody>';
+  t.innerHTML = h;
+}
+
+function flagPill(value, type){
+  if(type==='dscr'){
+    if(value>=1.3) return `<span class="pill pill-ok">Ok</span>`;
+    if(value>=1.0) return `<span class="pill pill-warn">Marg.</span>`;
+    return `<span class="pill pill-bad">Critico</span>`;
+  }
+  if(type==='pfnEbitda'){
+    if(value<=3) return `<span class="pill pill-ok">Sost.</span>`;
+    if(value<=5) return `<span class="pill pill-warn">Tirato</span>`;
+    return `<span class="pill pill-bad">Eccessivo</span>`;
+  }
+  return '';
+}
+
+function renderID(R){
+  const t = $('tblID');
+  let h = buildHeader(yLabels);
+  h+='<tbody>';
+  h+= `<tr class="section"><td colspan="${Y+1}">Redditività</td></tr>`;
+  h+= row('EBITDA margin', R.CE.map(c=>c.ebitdaMar),{fmt:'pct'});
+  h+= row('EBIT margin', R.CE.map(c=>c.ebitMar),{fmt:'pct'});
+  h+= row('ROS (Utile/Ricavi)', R.ID.map(d=>d.ROS),{fmt:'pct'});
+  h+= row('ROI (EBIT/CapInvest.)', R.ID.map(d=>d.ROI),{fmt:'pct'});
+  h+= row('ROE (Utile/PN)', R.ID.map(d=>d.ROE),{fmt:'pct'});
+  h+= `<tr class="section"><td colspan="${Y+1}">Solidità</td></tr>`;
+  h+= row('PFN (Debito - Cassa)', R.ID.map(d=>d.PFN));
+  h+= `<tr><td>PFN / EBITDA</td>${R.ID.map((d,i)=>`<td>${fmt(d.pfnEbitda,2)}x ${flagPill(d.pfnEbitda,'pfnEbitda')}</td>`).join('')}</tr>`;
+  h+= row('Leva finanziaria', R.ID.map(d=>d.leva),{fmt:'num'});
+  h+= row('Indipendenza finanziaria', R.ID.map(d=>d.indip),{fmt:'pct'});
+  h+= `<tr class="section"><td colspan="${Y+1}">Liquidità</td></tr>`;
+  h+= row('Current ratio', R.ID.map(d=>d.currR),{fmt:'num'});
+  h+= row('Quick ratio', R.ID.map(d=>d.quickR),{fmt:'num'});
+  h+= row('Ciclo del circolante (giorni)', R.ID.map(d=>({txt: fmt(d.ciclo,0)+' gg'})));
+  h+= `<tr class="section"><td colspan="${Y+1}">Sostenibilità</td></tr>`;
+  h+= `<tr><td>DSCR</td>${R.ID.map(d=>`<td>${fmt(d.DSCR,2)}x ${flagPill(d.DSCR,'dscr')}</td>`).join('')}</tr>`;
+  h+= row('Copertura Oneri Finanz. (EBITDA/OF)', R.ID.map(d=>d.copOF),{fmt:'num'});
+  h+= `<tr class="section"><td colspan="${Y+1}">Break-Even</td></tr>`;
+  h+= row('Punto di pareggio (€)', R.ID.map(d=>d.BEP));
+  h+= row('Margine di sicurezza', R.ID.map(d=>d.margSic),{fmt:'pct'});
+  h+= `<tr class="section"><td colspan="${Y+1}">Valutazione del Progetto</td></tr>`;
+  h+= row('Free Cash Flow', R.FCF);
+  h+= row('FCF cumulato', R.FCFcum);
+  // VAN, TIR, Payback su singola riga
+  const irrTxt = isFinite(R.IRR)? (R.IRR*100).toFixed(1)+'%' : 'n.c.';
+  const pbTxt = R.payback? `Anno ${R.payback}` : 'oltre Y5';
+  h+= `<tr class="bold"><td>VAN @ ${(R.inp.wacc*100).toFixed(1)}%</td><td colspan="${Y}" style="text-align:left">${fmtE(R.NPV)} &nbsp;·&nbsp; <strong>TIR:</strong> ${irrTxt} &nbsp;·&nbsp; <strong>Payback:</strong> ${pbTxt}</td></tr>`;
+  h+='</tbody>';
+  t.innerHTML = h;
+}
+
+/* ============================================================
+   KPI + GRAFICI
+   ============================================================ */
+let charts = {};
+function renderKPI(R){
+  const ricY5 = R.CE[Y-1].ricavi;
+  const ricY1 = R.CE[0].ricavi;
+  const cagr = ricY1>0 && ricY5>0 ? (Math.pow(ricY5/ricY1, 1/(Y-1))-1) : 0;
+  $('kRic').textContent = fmtE(ricY5);
+  $('kRicCagr').textContent = `CAGR ${(cagr*100).toFixed(1)}%`;
+  const ebiCum = R.CE.reduce((a,c)=>a+c.ebitda,0);
+  const ebiMarMed = R.CE.reduce((a,c)=>a+c.ebitdaMar,0)/Y;
+  $('kEbi').textContent = fmtE(ebiCum);
+  $('kEbiMar').textContent = `Margine medio ${(ebiMarMed*100).toFixed(1)}%`;
+  $('kNpv').textContent = fmtE(R.NPV);
+  $('kIrr').textContent = `TIR ${isFinite(R.IRR)? (R.IRR*100).toFixed(1)+'%' : 'n.c.'}`;
+  const pfn5 = R.ID[Y-1].pfnEbitda;
+  $('kPfn').textContent = `${fmt(pfn5,2)}x`;
+  $('kPfnFlag').innerHTML = pfn5<=3? `<span class="pill pill-ok">Sostenibile</span>` : pfn5<=5? `<span class="pill pill-warn">Tirato</span>`:`<span class="pill pill-bad">Eccessivo</span>`;
+}
+
+function makeChart(id, cfg){
+  if(charts[id]){ charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id), cfg);
+}
+
+function renderCharts(R){
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto";
+  Chart.defaults.font.size = 11;
+
+  makeChart('chRev',{
+    type:'bar',
+    data:{labels:yLabels,
+      datasets:[
+        {label:'Ricavi', data:R.CE.map(c=>c.ricavi), backgroundColor:'#2563eb'},
+        {label:'EBITDA', data:R.CE.map(c=>c.ebitda), backgroundColor:'#10b981'},
+        {label:'Utile Netto', type:'line', data:R.CE.map(c=>c.utile), borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:.25}
+      ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      scales:{y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  makeChart('chFcf',{
+    type:'bar',
+    data:{labels:yLabels,
+      datasets:[
+        {label:'FCF', data:R.FCF, backgroundColor:R.FCF.map(v=>v>=0?'#10b981':'#ef4444')},
+        {type:'line',label:'FCF cumulato', data:R.FCFcum, borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.25,fill:false}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  makeChart('chSp',{
+    type:'bar',
+    data:{labels:yLabels,
+      datasets:[
+        {label:'Patrimonio Netto', data:R.SP.map(s=>s.PN), backgroundColor:'#2563eb',stack:'a'},
+        {label:'Debiti finanziari', data:R.SP.map(s=>s.debFin), backgroundColor:'#ef4444',stack:'a'},
+        {label:'Debiti commerciali+IVA+trib.', data:R.SP.map(s=>s.debComm+s.debIVA+s.debTrib), backgroundColor:'#f59e0b',stack:'a'},
+        {label:'Cassa', type:'line', data:R.SP.map(s=>s.cassa), borderColor:'#10b981', backgroundColor:'#10b981',tension:.25}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  makeChart('chInd',{
+    type:'line',
+    data:{labels:yLabels,
+      datasets:[
+        {label:'DSCR', data:R.ID.map(d=>d.DSCR), borderColor:'#10b981', backgroundColor:'#10b981', tension:.25, yAxisID:'y'},
+        {label:'PFN/EBITDA', data:R.ID.map(d=>d.pfnEbitda), borderColor:'#ef4444', backgroundColor:'#ef4444',tension:.25, yAxisID:'y1'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{
+        y:{position:'left', title:{display:true,text:'DSCR (x)'}},
+        y1:{position:'right', title:{display:true,text:'PFN/EBITDA (x)'}, grid:{drawOnChartArea:false}}
+      },
+      plugins:{legend:{position:'bottom'}}}
+  });
+}
+
+/* ============================================================
+   EVENTI
+   ============================================================ */
+function refreshScenarioTag(){
+  const inp = readInputs();
+  const at = (v)=> v===0? '0' : (v>0?'+':'')+(v*100).toFixed(0)+'%';
+  const tag = `Prezzo ${at(inp.s_prc)} · Volumi ${at(inp.s_vol)} · Cuv ${at(inp.s_cuv)} · CF ${at(inp.s_cf)}`;
+  $('scTag').textContent = (inp.s_prc||inp.s_vol||inp.s_cuv||inp.s_cf)? tag : 'Caso Base';
+  $('vPrc').textContent = at(inp.s_prc);
+  $('vVol').textContent = at(inp.s_vol);
+  $('vCuv').textContent = at(inp.s_cuv);
+  $('vCf').textContent  = at(inp.s_cf);
+}
+
+function rerun(){
+  const inp = readInputs();
+  const R = compute(inp);
+  renderKPI(R);
+  renderCharts(R);
+  renderCE(R); renderSP(R); renderRF(R); renderID(R);
+  refreshScenarioTag();
+}
+
+document.addEventListener('input', e=>{
+  if(e.target.matches('input')) rerun();
+});
+$('btnRecalc').addEventListener('click', rerun);
+$('btnReset').addEventListener('click', ()=>{
+  const defs = {
+    i_vol:1000,i_prc:100,i_cuv:40,g_vol:20,g_prc:2,g_cuv:1,
+    i_pers:40000,i_aff:12000,i_mkt:10000,i_serv:6000,i_alt:3000,g_cf:3,
+    im1:50000,im2:0,im3:10000,im4:0,im5:0,aliq_m:20,
+    ii1:15000,ii2:0,ii3:0,ii4:0,ii5:0,aliq_i:33,
+    dso:60,dpo:60,dio:30,iva_v:22,iva_a:22,iva_p:3,
+    eq1:50000,eq2:0,eq3:0,eq4:0,eq5:0,
+    db1:40000,db2:0,db3:0,db4:0,db5:0,
+    rb1:8000,rb2:8000,rb3:8000,rb4:8000,rb5:8000,
+    tasso:6,ires:24,irap:3.9,wacc:8
+  };
+  for(const k in defs){ if($(k)) $(k).value = defs[k]; }
+  ['sPrc','sVol','sCuv','sCf'].forEach(id=>$(id).value=0);
+  rerun();
+});
+
+/* ====== AZZERA TUTTI GLI INPUT ======
+   Porta a 0 ogni campo numerico della sidebar (controls) e azzera gli slider.
+   Chiede conferma per evitare reset accidentali.
+*/
+$('btnClear').addEventListener('click', ()=>{
+  const ok = window.confirm(
+    "Vuoi azzerare TUTTI gli input?\n\n" +
+    "Tutti i valori della colonna di sinistra verranno portati a 0 " +
+    "(volumi, prezzi, costi, investimenti, equity, debiti, aliquote, ecc.) " +
+    "e gli slider What-if torneranno a 0%.\n\n" +
+    "L'operazione non può essere annullata. Per ripristinare i valori dell'esempio iniziale usa 'Reset esempio'."
+  );
+  if(!ok) return;
+  // Azzera tutti gli input numerici dentro la sidebar dei controlli
+  document.querySelectorAll('#controls input[type=number]').forEach(el => { el.value = 0; });
+  // Azzera anche gli slider What-if
+  ['sPrc','sVol','sCuv','sCf'].forEach(id => { if($(id)) $(id).value = 0; });
+  rerun();
+});
+
+$('btnPrint').addEventListener('click',()=>window.print());
+
+document.querySelectorAll('[data-preset]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const p = btn.dataset.preset;
+    const set = (id,v)=>$(id).value=v;
+    if(p==='base'){set('sPrc',0);set('sVol',0);set('sCuv',0);set('sCf',0);}
+    if(p==='best'){set('sPrc',15);set('sVol',20);set('sCuv',-5);set('sCf',0);}
+    if(p==='worst'){set('sPrc',-15);set('sVol',-20);set('sCuv',5);set('sCf',5);}
+    if(p==='cost'){set('sPrc',0);set('sVol',0);set('sCuv',15);set('sCf',15);}
+    rerun();
+  });
+});
+
+/* avvio */
+rerun();
+</script>
+</body>
+</html>
